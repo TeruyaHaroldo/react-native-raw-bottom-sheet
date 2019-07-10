@@ -1,3 +1,3 @@
-import RBSheet from "./src";
+import RawBottomSheet from "./src";
 
-export default RBSheet;
+export default RawBottomSheet;

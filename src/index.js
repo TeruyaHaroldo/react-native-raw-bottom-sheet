@@ -1,6 +1,12 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { View, Modal, TouchableOpacity, Animated, PanResponder } from "react-native";
+import {
+  View,
+  Modal,
+  TouchableOpacity,
+  Animated,
+  PanResponder
+} from "react-native";
 import styles from "./style";
 
 const SUPPORTED_ORIENTATIONS = [
@@ -11,7 +17,33 @@ const SUPPORTED_ORIENTATIONS = [
   "landscape-right"
 ];
 
-class RBSheet extends Component {
+class RawBottomSheet extends Component {
+  static propTypes = {
+    animationType: PropTypes.oneOf(["none", "slide", "fade"]),
+    height: PropTypes.number,
+    minClosingHeight: PropTypes.number,
+    duration: PropTypes.number,
+    closeOnDragDown: PropTypes.bool,
+    modal: PropTypes.bool,
+    closeOnPressMask: PropTypes.bool,
+    customStyles: PropTypes.objectOf(PropTypes.object),
+    onClose: PropTypes.func,
+    children: PropTypes.node
+  };
+
+  static defaultProps = {
+    animationType: "none",
+    height: 260,
+    minClosingHeight: 0,
+    duration: 200,
+    closeOnDragDown: false,
+    closeOnPressMask: true,
+    modal: false,
+    customStyles: {},
+    onClose: null,
+    children: <View />
+  };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -77,62 +109,66 @@ class RBSheet extends Component {
   }
 
   render() {
-    const { animationType, closeOnPressMask, children, customStyles } = this.props;
+    const {
+      animationType,
+      closeOnPressMask,
+      children,
+      customStyles,
+      modal,
+    } = this.props;
     const { animatedHeight, pan, modalVisible } = this.state;
     const panStyle = {
       transform: pan.getTranslateTransform()
     };
 
-    return (
-      <Modal
-        transparent
-        animationType={animationType}
-        visible={modalVisible}
-        supportedOrientations={SUPPORTED_ORIENTATIONS}
-        onRequestClose={() => {
-          this.setModalVisible(false);
-        }}
+    const contentContainer = () => (
+      <Animated.View
+        {...this.panResponder.panHandlers}
+        style={[
+          panStyle,
+          styles.container,
+          customStyles.container,
+          { height: animatedHeight }
+        ]}
       >
-        <View style={[styles.wrapper, customStyles.wrapper]}>
-          <TouchableOpacity
-            style={styles.mask}
-            activeOpacity={1}
-            onPress={() => (closeOnPressMask ? this.close() : {})}
-          />
-          <Animated.View
-            {...this.panResponder.panHandlers}
-            style={[panStyle, styles.container, customStyles.container, { height: animatedHeight }]}
-          >
-            {children}
-          </Animated.View>
-        </View>
-      </Modal>
+        <View
+          style={{
+            backgroundColor: '#cbcbcb',
+            height: 5,
+            width: 20,
+            borderRadius: 4,
+            marginTop: 12,
+          }}
+        />
+        {children}
+      </Animated.View>
     );
+
+    if (modal) {
+      return (
+        <Modal
+          transparent
+          animationType={animationType}
+          visible={modalVisible}
+          supportedOrientations={SUPPORTED_ORIENTATIONS}
+          onRequestClose={() => {
+            this.setModalVisible(false);
+          }}
+        >
+          <View style={[styles.wrapper, customStyles.wrapper]}>
+            <TouchableOpacity
+              style={styles.mask}
+              activeOpacity={1}
+              onPress={() => (closeOnPressMask ? this.close() : {})}
+            />
+            {contentContainer()}
+          </View>
+        </Modal>
+      )
+    }
+
+    return contentContainer();
   }
 }
 
-RBSheet.propTypes = {
-  animationType: PropTypes.oneOf(["none", "slide", "fade"]),
-  height: PropTypes.number,
-  minClosingHeight: PropTypes.number,
-  duration: PropTypes.number,
-  closeOnDragDown: PropTypes.bool,
-  closeOnPressMask: PropTypes.bool,
-  customStyles: PropTypes.objectOf(PropTypes.object),
-  onClose: PropTypes.func,
-  children: PropTypes.node
-};
-
-RBSheet.defaultProps = {
-  animationType: "none",
-  height: 260,
-  minClosingHeight: 0,
-  duration: 300,
-  closeOnDragDown: false,
-  closeOnPressMask: true,
-  customStyles: {},
-  onClose: null,
-  children: <View />
-};
-
-export default RBSheet;
+export default RawBottomSheet;
